@@ -1,0 +1,2 @@
+TOOLRAND.py    随机算法
+GLOBAL.py    全局变量，常用方法

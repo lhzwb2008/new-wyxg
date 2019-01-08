@@ -1,0 +1,18 @@
+﻿Make sure you have g++ installed.
+
+First, type:
+
+	> make testcallso
+
+	> ./testcallso ./song/test.mid 一闪一闪亮晶晶满天都是小星星 14 ./out123.wav ./voice/0/inf.n ./voice/0/voice.n 1
+
+Then, you'll find out.wav.
+
+
+Ps: if "testcallso" cannot find "libniao.so",
+you need to move "libniao.so" to /usr/local/lib/ and then update.
+
+	> sudo cp libniao.so /usr/lib/
+	> sudo cp libniao.so /usr/local/lib/
+	> sudo /sbin/ldconfig -v
+	> ./testcallso ./song/test.mid 一闪一闪亮晶晶满天都是小星星 14 ./out123.wav ./voice/0/inf.n ./voice/0/voice.n 1
