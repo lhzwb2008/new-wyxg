@@ -89,4 +89,4 @@
 
 
 # 测试用例
-www.woyaoxiege.com:8080/code?content=这是一首测试的歌曲&velocity=90&source=1&genre=0&emotion=0
+http://1.117.109.129:8080/code/?content=%E5%B0%8F%E8%91%A1%E8%90%84%E5%B0%8F%E8%91%A1%E8%90%84%E5%B0%8F%E5%91%80%E5%B0%8F%E8%91%A1%E8%90%84,%E4%BD%A0%E5%A5%BD%E5%91%80%E4%BD%A0%E5%A5%BD%E5%91%80%E4%BD%A0%E5%91%80%E4%BD%A0%E5%A5%BD%E5%91%80&velocity=90&source=1&genre=0&emotion=0
