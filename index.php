@@ -2,24 +2,75 @@
 require 'vendor/autoload.php';
 header("Access-Control-Allow-Origin:*");
 date_Default_timezone_set("PRC");
+include_once "wxBizMsgCrypt.php";
 
 use Qiniu\Auth;
 use Qiniu\Storage\UploadManager;
 
-$content = $_REQUEST['content'];
-$velocity = $_REQUEST['velocity'];
-$source = $_REQUEST['source']; //1男中音 3女高音 5女中音
-$genre = $_REQUEST['genre']; //0 流行 1 民谣 2 摇滚 3 电子
-$emotion = $_REQUEST['emotion']; // 0 开心 1 伤心
-// echo '|content:' . $content . ';velocity:' . $velocity . ';source:' . $source . ';genre:' . $genre . ';emotion:' . $emotion . "\n";
+
+//GET
+if(isset($_GET["echostr"])){
+$signature = $_GET["signature"];
+$timestamp = $_GET["timestamp"];
+$nonce = $_GET["nonce"];
+$echostr = $_GET["echostr"];
+$token = "woyaoxiege2022";
+$tmpArr = array($token, $timestamp, $nonce);
+sort($tmpArr, SORT_STRING);
+$tmpStr = implode( $tmpArr );
+$tmpStr = sha1( $tmpStr );
+
+if( $tmpStr == $signature ){
+   echo $echostr;
+}
+
+$log=$echostr;
+$file=dirname(__FILE__).'/log';
+file_put_contents($file,$log."\n",FILE_APPEND);
+
+return;
+}
+
+
+// 第三方收到公众号平台发送的消息
+$encodingAesKey = "7d0upQkRUU73Vk1mZh1uPZAifpa79gVUkxRRURpAf1F";
+$token = "woyaoxiege2022";
+$appId = "wxd1912174a94805dc";
+$xmltext = file_get_contents('php://input');
+$xml = new DOMDocument();
+$xml->loadXML($xmltext);
+$msgType=$xml->getElementsByTagName('MsgType')->item(0)->nodeValue;
+$toUser = $xml->getElementsByTagName('ToUserName')->item(0)->nodeValue;
+$fromUser = $xml->getElementsByTagName('FromUserName')->item(0)->nodeValue;
+$createTime = $xml->getElementsByTagName('CreateTime')->item(0)->nodeValue;
+if($msgType=='text'){
+    $msg = $xml->getElementsByTagName('Content')->item(0)->nodeValue;
+}else{
+    $format="<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[欢迎关注写歌机器人，请直接回复对话制作歌曲！]]></Content></xml>";
+    echo sprintf($format,$fromUser,$toUser,$createTime);
+    return;    
+}
+
+
+$log=$xmltext;
+$file=dirname(__FILE__).'/log';
+file_put_contents($file,$log."\n",FILE_APPEND);
+
+
+//$content = $_REQUEST['content'];
+$content = $msg;
+
+$source = rand(1,6); //1男中音 3女高音 5女中音
+$genre = rand(0, 3); //0 流行 1 民谣 2 摇滚 3 电子
+$emotion = rand(0, 1); // 0 开心 1 伤心
 
 $rate = rand(5, 8) / 10;
 $name = md5(uniqid());
 $url = "";
 $content = replace_specialChar($content);
 $content = replace_space($content);
-// $contents = separate($content);
-$contents = explode(",", $content);
+$contents = separate($content);
+//$contents = explode(",", $content);
 $size = sizeof($contents);
 if ($size > 16 || $size == 1 || $size == 7 || $size == 11 || $size == 13 || $size == 14 || $size == 15) {
     $data = array(
@@ -61,7 +112,7 @@ if (strlen($zhugecount) > 0 && strlen($fugecount) > 0) {
     $zhugecount = substr($zhugecount, 0, strlen($zhugecount) - 1);
     $fugecount = substr($fugecount, 0, strlen($fugecount) - 1);
 }
-// $velocity = 100 - (int) ($gecicount / $size) * 5 + $rate * 120;
+$velocity = 100 - (int) ($gecicount / $size) * 5 + $rate * 120;
 if ($source == 1) {
     $melody_range_a = "35,47";
     $melody_range_b = "35,48";
@@ -83,16 +134,16 @@ if ($source == 1) {
 }
 // echo 'sh ./run_h5.sh ' . $name . ' ' . $zhugecount . ' ' . $fugecount . ' ' . $gecicount . ' ' . $geci . ' ' . $velocity . ' ' . $source . ' ' . $melody_range_a . ' ' . $melody_range_b . ' ' . $genre . ' ' . $emotion . ' ' . $zhugesize . ' ' . $fugesize . ' 2>&1';
 exec('sh /opt/lampp/htdocs/code/scripts/run_h5.sh ' . $name . ' ' . $zhugecount . ' ' . $fugecount . ' ' . $gecicount . ' ' . $geci . ' ' . $velocity . ' ' . $source . ' ' . $melody_range_a . ' ' . $melody_range_b . ' ' . $genre . ' ' . $emotion . ' ' . $zhugesize . ' ' . $fugesize . ' 2>&1', $result, $status);
-// print_r($result);
+ //print_r($result);
 
 $mp3File = '';
 $success = 0;
 
 if ($status == 0) {
-    $accessKey = 'JCYcOc_dLoCag3mmdCFLa_GujdrKrooX96IbeF0N';
-    $secretKey = '7s0pz2cTpOxE-wDddiLEu8hI3UpK5oQi-mvg0Ed3';
+    $accessKey = 'SensouuuWDDs6gXrhcXyGjYX0KnAh0uqyUxF0kBt';
+    $secretKey = 'yf7QYJBcayWpvsORg-kdOj5zl85rNJkJe9bPFDnE';
     $auth = new Auth($accessKey, $secretKey);
-    $bucket = '2018';
+    $bucket = 'woyaoxiege2022';
 // 生成上传Token
     $token = $auth->uploadToken($bucket);
 // 构建 UploadMan
@@ -108,7 +159,7 @@ if ($status == 0) {
         echo $err;
         $status = 1;
     } else {
-        $mp3File = "http://ai.mojing.cn/".$key;
+        $mp3File = "http://rc64scsoz.hd-bkt.clouddn.com/".$key;
     }
 } else {
     echo "process failed";
@@ -121,7 +172,15 @@ $data = array(
     'success' => $success,
 );
 
-echo json_encode($data);
+//echo json_encode($data);
+$desc='微信搜AISongWriter写歌！';
+$title='写歌机器人';
+$picurl="http://rc64scsoz.hd-bkt.clouddn.com/music.png";
+//$format = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[music]]></MsgType><Music><Title><![CDATA[%s]]></Title><Description><![CDATA[%s]]></Description><MusicUrl><![CDATA[%s]]></MusicUrl><HQMusicUrl><![CDATA[%s]]></HQMusicUrl><ThumbMediaId><![CDATA[bEHD95wNJD95LJHkcSb1xCwsn8wnE7KqyE76bx7cQH0k7XGg0xmyEs_lzWwwGZbC]]></ThumbMediaId></Music></xml>";
+//echo sprintf($format,$fromUser,$toUser,$createTime,$title,$desc,$mp3File,$mp3File);
+$format = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[news]]></MsgType><ArticleCount>1</ArticleCount><Articles><item><Title><![CDATA[%s]]></Title><Description><![CDATA[%s]]></Description><PicUrl><![CDATA[%s]]></PicUrl><Url><![CDATA[%s]]></Url></item></Articles></xml>";
+echo sprintf($format,$fromUser,$toUser,$createTime,$title,$desc,$picurl,$mp3File);
+return;
 
 function depart(&$result, $count, $str)
 {
@@ -243,3 +302,4 @@ function replace_space($str)
     $replace = array("", "", "", "", "");
     return str_replace($search, $replace, $str);
 }
+
